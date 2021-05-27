@@ -11,3 +11,8 @@ func CertGen(msk, pk []byte) []byte {
 func CertVrfy(cert, pk, mpk []byte) bool {
 	return ed25519.Verify(mpk, pk, cert)
 }
+
+// Pair verifies that the public key is corresponding to the private key
+func Pair(pk ed25519.PublicKey, sk ed25519.PrivateKey) bool {
+	return pk.Equal(sk.Public())
+}
