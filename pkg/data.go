@@ -1,5 +1,8 @@
 package pkg
 
+
+// TODO: Adding Marlin zsk public parameter struct
+// TODO: Adding Verify and proof generation
 type ZskPP struct {
 	
 }
