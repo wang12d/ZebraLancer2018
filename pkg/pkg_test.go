@@ -5,23 +5,19 @@ import (
 	"testing"
 
 	"github.com/wang12d/ZebraLancer2018/pkg"
+	"github.com/wang12d/ZebraLancer2018/pkg/ra"
 )
 
 func TestAuth(t *testing.T) {
-	mpk, msk, err := pkg.Setup()
-	if err != nil {
-		t.Logf("Key generation error: %v", err)
-	}
 	pk, sk, err := pkg.KeyGeneration()
 	if err != nil {
 		t.Logf("User key generation error: %v", err)
 	}
 	fmt.Printf("pk: %x\nsk: %x\n", pk, sk)
-	fmt.Printf("mpk: %x\nmsk: %x\n", mpk, msk)
 	prefix, msg := []byte("hello"), []byte(" world.")
-	cert := pkg.CertGen(msk, pk)
+	cert := ra.RA.CertGen(pk)
 	fmt.Printf("prefix: %x\nmsg: %x\ncert: %x\n", prefix, msg, cert)
-	if !pkg.CertVrfy(cert, pk, mpk) {
+	if !ra.CertVrfy(cert, pk, ra.RA.Mpk()) {
 		t.Logf("Certificate verification error")
 	}
 }
