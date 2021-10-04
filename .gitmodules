@@ -1,4 +1,0 @@
-[submodule "Go-Marlin"]
-	path = Go-Marlin
-	url = https://github.com/wang12d/Go-Marlin
-	branch = main
