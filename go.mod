@@ -2,6 +2,8 @@ module github.com/wang12d/ZebraLancer2018
 
 go 1.16
 
-replace github.com/wang12d/Go-Marlin => /home/wang/Documents/Codes/Go/GoMarlin
+require github.com/wang12d/GoMarlin v0.0.1
 
-require github.com/wang12d/Go-Marlin v1.0.0
+replace github.com/wang12d/Go-Crowdsourcing-DApp v0.0.2 => /home/wang/Documents/Codes/Go/PaperExp/Crowdsourcing
+
+replace github.com/wang12d/GoMarlin v0.0.1 => /home/wang/Documents/Codes/Go/GoMarlin

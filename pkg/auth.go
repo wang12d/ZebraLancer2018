@@ -4,7 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 
-	"github.com/wang12d/Go-Marlin/marlin"
+	"github.com/wang12d/GoMarlin/marlin"
 )
 
 // Auth generates the zero-knowledge proof of the requirement
