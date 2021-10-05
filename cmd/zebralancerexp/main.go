@@ -35,7 +35,7 @@ func main() {
 	workers := make([]*worker.W, workerRequired)
 	for i := 0; i < workerRequired; i++ {
 		workers[i] = worker.NewW()
-		workers[i].Register()
+		workers[i].Register(ra.RA)
 	}
 
 	t, err := r.Task()

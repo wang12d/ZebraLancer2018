@@ -33,8 +33,12 @@ func NewW() *W {
 }
 
 // Register binds the public key of a worker with a certificate from register authority
-func (w *W) Register() ra.Certificate {
-	w.cert = ra.RA.CertGen(w.pk)
+func (w *W) Register(RA ra.RegisterAuthority) ra.Certificate {
+	var err error
+	w.cert, err = RA.CertGen(w.pk)
+	if err != nil {
+		log.Fatalf("Worker obtain certificate error: %v\n", err)
+	}
 	w.cw.Register(1)
 	return w.cert
 }

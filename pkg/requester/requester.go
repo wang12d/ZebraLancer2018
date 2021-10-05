@@ -33,7 +33,11 @@ func NewR(byteSize int) *R {
 
 // Register to binding a certificate to its public key
 func (r *R) Register(RA ra.RegisterAuthority) ra.Certificate {
-	r.cert = RA.CertGen(r.pk)
+	var err error
+	r.cert, err = RA.CertGen(r.pk)
+	if err != nil {
+		log.Fatalf("Register obtain certificate error: %v\n", err)
+	}
 	return r.cert
 }
 
