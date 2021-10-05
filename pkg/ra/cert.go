@@ -30,7 +30,10 @@ func init() {
 			if err != nil {
 				log.Fatalf("RA key generation error: %v\n", err)
 			}
-			RA.mpk, RA.msk = pk, sk
+			RA = &ra{
+				msk: sk,
+				mpk: pk,
+			}
 		})
 }
 

@@ -11,37 +11,54 @@ import (
 )
 
 type W struct {
-	sk   []byte
-	pk   []byte
-	cert ra.Certificate
-	cw   *cworker.Worker
+	sk            []byte
+	pk            []byte
+	encryptedData []byte
+	cert          ra.Certificate
+	cw            *cworker.Worker
 }
 
-func newW() *W {
+func NewW() *W {
 	pk, sk, err := pkg.KeyGeneration()
 	if err != nil {
 		log.Fatalf("Key generation error: %v\n", err)
 	}
 	return &W{
-		pk:   pk,
-		sk:   sk,
-		cert: nil,
-		cw:   cworker.NewWorker(),
+		pk:            pk,
+		sk:            sk,
+		cert:          nil,
+		encryptedData: nil,
+		cw:            cworker.NewWorker(),
 	}
 }
 
+// Register binds the public key of a worker with a certificate from register authority
+func (w *W) Register() ra.Certificate {
+	w.cert = ra.RA.CertGen(w.pk)
+	w.cw.Register(1)
+	return w.cert
+}
+
 // AnswerCollection collects and uploads data to crowdsourcing blockchain
-func (w *W) AnswerCollection(t *task.Task, data []byte) (pkg.Proof, marlin.VerifyKey) {
+func (w *W) AnswerCollection(t *task.Task, data []byte) (pkg.Auxiliary, pkg.Proof, marlin.VerifyKey) {
 	w.cw.ParticipantTask(t)
 	w.cw.CollectData(0, data)
+	w.cw.SubmitData(0)
+	var err error
 	workerAddress := w.cw.Address().Bytes()
 	taskAddress := t.Address().Bytes()
-	encryptedData, err := t.Encryptor().EncryptData(data)
+	w.encryptedData, err = t.Encryptor().EncryptData(data)
 	if err != nil {
 		log.Fatalf("Worker encrypts data error: %v\n", err)
 	}
-	msg := make([]byte, len(workerAddress)+len(encryptedData))
+	msg := make([]byte, len(workerAddress)+len(w.encryptedData))
 	copy(msg[:len(workerAddress)], workerAddress)
-	copy(msg[len(workerAddress):], encryptedData)
-	return ra.Auth(taskAddress, msg, w.sk, w.pk, w.cert, ra.RA.Mpk())
+	copy(msg[len(workerAddress):], w.encryptedData)
+	proof, vk := ra.Auth(taskAddress, msg, w.sk, w.pk, w.cert, ra.RA.Mpk())
+	return pkg.Auxiliary{Prefix: taskAddress, Msg: msg}, proof, vk
+}
+
+// EncryptedData returns encrypted data collected by the worker
+func (w *W) EncryptedData() []byte {
+	return w.encryptedData
 }
