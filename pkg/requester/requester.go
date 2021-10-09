@@ -2,6 +2,7 @@ package requester
 
 import (
 	"log"
+	"time"
 
 	crequester "github.com/wang12d/Go-Crowdsourcing-DApp/pkg/crowdsourcing/requester"
 	"github.com/wang12d/Go-Crowdsourcing-DApp/pkg/crowdsourcing/task"
@@ -52,9 +53,12 @@ func (r *R) TaskPublish(workerRequired int, reward int64, description string) (p
 }
 
 // Reward awarding all of the workers after submitted their task
-func (r *R) Reward(rewardingPolicy reward.Policy) (marlin.Proof, marlin.VerifyKey) {
+func (r *R) Reward(rewardingPolicy reward.Policy) (marlin.Proof, marlin.VerifyKey, time.Duration) {
 	r.cr.Rewarding(rewardingPolicy)
-	return r.cr.GeneateZKProof()
+	timeStart := time.Now()
+	proof, vk := r.cr.GeneateZKProof()
+	timeCost := time.Since(timeStart)
+	return proof, vk, timeCost
 }
 
 // Task return the task published by the requester
