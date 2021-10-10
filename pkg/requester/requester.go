@@ -39,12 +39,12 @@ func (r *R) Register(RA ra.RegisterAuthority) ra.Certificate {
 	if err != nil {
 		log.Fatalf("Register obtain certificate error: %v\n", err)
 	}
+	r.cr.Register()
 	return r.cert
 }
 
 // TaskPublish publish a crowdsourcing task to public
 func (r *R) TaskPublish(workerRequired int, reward int64, description string) (pkg.Auxiliary, pkg.Proof, marlin.VerifyKey) {
-	r.cr.Register()
 	r.cr.PostTask(workerRequired, reward, description) // Post the task to blockchain network
 	taskAddress := r.cr.Task().Address().Bytes()
 	reqeusterAddress := r.cr.Address().Bytes()
@@ -54,8 +54,8 @@ func (r *R) TaskPublish(workerRequired int, reward int64, description string) (p
 
 // Reward awarding all of the workers after submitted their task
 func (r *R) Reward(rewardingPolicy reward.Policy) (marlin.Proof, marlin.VerifyKey, time.Duration) {
-	r.cr.Rewarding(rewardingPolicy)
 	timeStart := time.Now()
+	r.cr.Rewarding(rewardingPolicy)
 	proof, vk := r.cr.GeneateZKProof()
 	timeCost := time.Since(timeStart)
 	return proof, vk, timeCost
