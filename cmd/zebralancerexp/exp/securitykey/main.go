@@ -26,11 +26,14 @@ const (
 var ()
 
 func main() {
-	byteSize := 2048
 	numberOfIteration := 5
 
 	numberOfWorkers := make([]int, 0)
-	for _, str := range os.Args[1:] {
+	byteSize, err := strconv.Atoi(os.Args[1])
+	if err != nil {
+		log.Fatalf("Convert to number err: %v\n", err)
+	}
+	for _, str := range os.Args[2:] {
 		nw, err := strconv.Atoi(str)
 		if err != nil {
 			log.Fatalf("Conver to number err: %v\n", err)
@@ -39,23 +42,28 @@ func main() {
 	}
 	length := len(numberOfWorkers)
 	registerationTimeCost, taskPublicationTimeCost := make([]time.Duration, length), make([]time.Duration, length)
+	requesterRegistrationTimeCost, workerRegistrationTimeCost := make([]time.Duration, length), make([]time.Duration, length)
 	taskParticipationTimeCost, dataCollectionTimeCost := make([]time.Duration, length), make([]time.Duration, length)
 	rewardingTimeCost := make([]time.Duration, length)
 	onChainStorage := make([]int, length)
 	communication := make([]int, length)
 
 	var registerationCost, taskPublicationCost, taskParticipationCost, dataCollectionCost, rewardingCost time.Duration
+	var requesterRegistrationCost, workerRegistrationCost time.Duration
 	var onChainBytes, communicationCost int
 
 	var timeStart time.Time
 	for i := 0; i < int(numberOfIteration); i++ {
 		for n, workerRequired := range numberOfWorkers {
 			onChainBytes, registerationCost, taskPublicationCost, taskParticipationCost, dataCollectionCost, rewardingCost = 0, 0, 0, 0, 0, 0
+			requesterRegistrationCost, workerRegistrationCost = 0, 0
 			communicationCost = 0
 			r := requester.NewR(byteSize)
 			timeStart = time.Now()
 			r.Register(ra.RA)
-			registerationCost += time.Since(timeStart)
+			requesterRegistrationCost += time.Since(timeStart)
+			registerationCost += requesterRegistrationCost
+			requesterRegistrationTimeCost[n] += requesterRegistrationCost
 			taskDescription := "Collecting the time of daliy smartphone usage"
 			timeStart = time.Now()
 			aulxiliary, proof, vk := r.TaskPublish(workerRequired, reward, taskDescription)
@@ -76,8 +84,10 @@ func main() {
 				workers[ii] = worker.NewW()
 				timeStart = time.Now()
 				workers[ii].Register(ra.RA)
-				registerationCost += time.Since(timeStart)
+				workerRegistrationCost += time.Since(timeStart)
 			}
+			registerationCost += workerRegistrationCost
+			workerRegistrationTimeCost[n] += workerRegistrationCost / time.Duration(workerRequired)
 			registerationTimeCost[n] += registerationCost / time.Duration(workerRequired+1)
 
 			t, err := r.Task()
@@ -88,6 +98,7 @@ func main() {
 			encryptedData := make([][]byte, workerRequired)
 			for ii, w := range workers {
 				daliyTime := mu + 3*sigma + rand.Uint64()%5000
+				fmt.Printf("Go data: %v\n", daliyTime)
 				data := encoder.Uint64ToBytes(daliyTime)
 
 				timeStart = time.Now()
@@ -130,6 +141,7 @@ func main() {
 
 			onChainStorage[n] += onChainBytes
 			communication[n] += communicationCost
+			fmt.Printf("Go evalReuslt: %v\n Go encrypted: %v\n", evalResults, encryptedData)
 			rewardResult := marlin.VerifyEncryptionZKProof(evalResults, encryptedData, marlinProof, marlinVk)
 			if !rewardResult {
 				log.Fatalln("Reward verification failed")
@@ -137,8 +149,10 @@ func main() {
 		}
 	}
 
+	fmt.Printf("ZebraLancer: %v\n", byteSize)
 	for i := 0; i < length; i++ {
-		fmt.Printf("%v,%v,%v,%v,%v,%v,%v\n", registerationTimeCost[i]/time.Duration(numberOfIteration),
+		fmt.Printf("%v(%v, %v),%v,%v,%v,%v,%v,%v\n", registerationTimeCost[i]/time.Duration(numberOfIteration),
+			requesterRegistrationTimeCost[i]/time.Duration(numberOfIteration), workerRegistrationTimeCost[i]/time.Duration(numberOfIteration),
 			taskPublicationTimeCost[i]/time.Duration(numberOfIteration), taskParticipationTimeCost[i]/time.Duration(numberOfIteration),
 			dataCollectionTimeCost[i]/time.Duration(numberOfIteration), rewardingTimeCost[i]/time.Duration(numberOfIteration),
 			float64(onChainStorage[i])/1024.0/float64(numberOfIteration), float64(communication[i])/1024.0/float64(numberOfIteration),
