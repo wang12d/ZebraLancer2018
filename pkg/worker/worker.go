@@ -43,9 +43,12 @@ func (w *W) Register(RA ra.RegisterAuthority) ra.Certificate {
 	return w.cert
 }
 
+func (w *W) ParticipantTask(t *task.Task) {
+	w.cw.ParticipantTask(t)
+}
+
 // AnswerCollection collects and uploads data to crowdsourcing blockchain
 func (w *W) AnswerCollection(t *task.Task, data []byte) (pkg.Auxiliary, pkg.Proof, marlin.VerifyKey) {
-	w.cw.ParticipantTask(t)
 	w.cw.CollectData(0, data)
 	w.cw.SubmitData(0)
 	var err error
